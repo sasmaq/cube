@@ -1,0 +1,5 @@
+# Cloudflare Pages project config. Deploy with `npm run deploy`, or connect the
+# repository in the Cloudflare dashboard (build command `npm run build`, output `dist`).
+name = "cubesteps"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-10-01"

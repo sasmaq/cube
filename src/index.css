@@ -1,0 +1,137 @@
+@import 'tailwindcss';
+@plugin "daisyui" {
+  themes:
+    winter --default,
+    night --prefersdark;
+}
+
+/* Primary is the cube's yellow; dark mode tones it down so it doesn't glare on the dark grays. */
+@plugin "daisyui/theme" {
+  name: 'winter';
+  --color-primary: #ffd500;
+  --color-primary-content: #1f1f1f;
+  /* Winter's stock info is a pale cyan that disappears on white; a mid sky blue keeps the tint and icon visible. */
+  --color-info: #0284c7;
+  /* Winter's stock success is a teal; solved states should read as green. */
+  --color-success: #15803d;
+  --color-success-content: #ffffff;
+}
+
+/* Dark mode is plain neutral grays with no tint; only the status colors keep a hue. */
+@plugin "daisyui/theme" {
+  name: 'night';
+  color-scheme: dark;
+  --color-base-100: #1e1e1e;
+  --color-base-200: #151515;
+  --color-base-300: #2e2e2e;
+  --color-base-content: #e6e6e6;
+  --color-primary: #d6b42c;
+  --color-primary-content: #1f1f1f;
+  --color-secondary: #a3a3a3;
+  --color-secondary-content: #151515;
+  --color-accent: #d4d4d4;
+  --color-accent-content: #151515;
+  --color-neutral: #333333;
+  --color-neutral-content: #e6e6e6;
+  --color-info: #60a5fa;
+  --color-info-content: #151515;
+  --color-success: #4ade80;
+  --color-success-content: #151515;
+  --color-warning: #fbbf24;
+  --color-warning-content: #151515;
+  --color-error: #f87171;
+  --color-error-content: #151515;
+}
+
+@theme {
+  --font-sans: 'Inter', 'IBM Plex Sans Arabic', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Primary for text (text-primary-ink). Bright yellow can't be read on white, so light mode uses a deep amber. */
+@theme inline {
+  --color-primary-ink: var(--primary-ink);
+}
+:root,
+[data-theme='winter'] {
+  --primary-ink: #8a6500;
+}
+[data-theme='night'] {
+  --primary-ink: var(--color-primary);
+}
+
+/* Letter spacing pulls joined Arabic letters apart, so Arabic text keeps its natural spacing. */
+:lang(ar) [class*='tracking-'] {
+  letter-spacing: normal;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--color-base-200);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Move chips are colored by face: F green, U blue, R red, L orange. */
+.move-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.1rem;
+  height: 1.9rem;
+  padding: 0 0.45rem;
+  border-radius: 0.5rem;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  color: white;
+  font-variant-numeric: tabular-nums;
+  transition:
+    transform 120ms ease,
+    opacity 120ms ease,
+    box-shadow 120ms ease;
+  user-select: none;
+}
+.move-chip.sm {
+  min-width: 1.75rem;
+  height: 1.5rem;
+  font-size: 0.8rem;
+  border-radius: 0.4rem;
+}
+.move-chip.lg {
+  min-width: 3.4rem;
+  height: 3rem;
+  font-size: 1.5rem;
+  border-radius: 0.75rem;
+}
+.move-F { background: #3fae49; }
+.move-U { background: #27a7e0; }
+.move-R { background: #e62a3c; }
+.move-L { background: #f28a20; }
+.move-D { background: #6b7280; }
+.move-B { background: #8b5cf6; }
+.move-M, .move-E, .move-S { background: #475569; }
+.move-x, .move-y, .move-z {
+  background: transparent;
+  color: var(--color-base-content);
+  border: 2px dashed color-mix(in oklab, var(--color-base-content) 45%, transparent);
+}
+.move-chip.done { opacity: 0.38; }
+.move-chip.current {
+  transform: translateY(-2px) scale(1.08);
+  box-shadow:
+    0 0 0 2px var(--color-base-100),
+    0 0 0 4px var(--color-primary);
+}
+
+.cube-stage {
+  background:
+    radial-gradient(120% 90% at 50% 35%, var(--color-base-100) 0%, var(--color-base-200) 100%);
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
