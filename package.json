@@ -9,8 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "deploy": "npm run build && npx wrangler pages deploy dist"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "react": "^19.2.8",

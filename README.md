@@ -1,5 +1,7 @@
 # Cube
 
+[![CI](https://github.com/sasmaq/cube/actions/workflows/ci.yml/badge.svg)](https://github.com/sasmaq/cube/actions/workflows/ci.yml)
+
 A static React app that visualizes the **8-step beginner method** on a 3D cube built with three.js.
 
 - **Solve** — one mixed-up cube, solved through all eight steps. The steps run along the bottom, and pieces the
@@ -26,26 +28,7 @@ npm test           # run the test suite once (vitest)
 npm run lint       # eslint
 npm run build      # type-check and build to dist/
 npm run preview    # serve the production build
-npm run deploy     # build and deploy to Cloudflare Pages with wrangler
 ```
-
-## Deploying to Cloudflare Pages
-
-The build output is a plain static site in `dist/`.
-
-**Git integration (recommended):** create a Pages project from the repository with
-
-| Setting          | Value                     |
-| ---------------- | ------------------------- |
-| Build command    | `npm run build`           |
-| Output directory | `dist`                    |
-| Node version     | 22 (from `.node-version`) |
-
-**Direct upload:** `npm run deploy` builds and runs `wrangler pages deploy dist` (you'll be asked to log in the first
-time). Project settings live in `wrangler.toml`.
-
-`public/_headers` gives hashed assets a long cache lifetime. Navigation uses the URL hash (`#learn`), so no SPA
-redirect rules are needed.
 
 ## The method
 
