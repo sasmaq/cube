@@ -520,6 +520,9 @@ export function solve(start: CubeState): Solution {
     b.group = undefined
     stage(b)
   })
+  // Turning the cube over belongs to the first step that has work to do, which isn't Step 1 when the cross was already there.
+  const [hold, next] = b.segments
+  if (hold?.text.id === 'holdYellowOnTop') hold.stage = next?.stage ?? 8
   if (!isSolved(b.state)) throw new Error('Solver finished without solving the cube')
   return { start, segments: b.segments, end: b.state }
 }

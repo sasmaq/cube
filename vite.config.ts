@@ -22,7 +22,15 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    // Tests that need a DOM opt in with a `// @vitest-environment jsdom` comment.
     environment: 'node',
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**', 'src/main.tsx', 'src/vite-env.d.ts'],
+      // json-summary feeds the coverage table in CI's job summary.
+      reporter: ['text', 'html', 'json-summary'],
+    },
   },
 })

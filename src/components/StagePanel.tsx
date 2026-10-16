@@ -21,7 +21,8 @@ export function StagePanel({ player, timeline }: { player: Player; timeline: Tim
   useEffect(() => {
     const list = listRef.current
     const item = list?.querySelector<HTMLElement>('[data-current="true"]')
-    if (list && item) list.scrollTo({ top: item.offsetTop - list.offsetTop - 48, behavior: 'smooth' })
+    // The list is `relative`, so the item's offsetTop is already measured from the list's top.
+    if (list && item) list.scrollTo({ top: item.offsetTop - 48, behavior: 'smooth' })
   }, [segIndex])
 
   if (finished || !stage) {

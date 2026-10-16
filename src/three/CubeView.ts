@@ -333,6 +333,8 @@ export class CubeView {
     this.camera.position.copy(DEFAULT_CAMERA)
     this.controls.target.copy(TARGET)
     this.controls.update()
+    // update() has already recorded the new position, so the next tick won't see a change.
+    this.dirty = true
   }
 
   dispose() {

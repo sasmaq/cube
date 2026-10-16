@@ -40,7 +40,19 @@ jobs:
       - uses: ./.github/actions/setup
       # On GitHub Actions, Vitest also writes a test report to the job summary
       # and annotates failing tests on the changed lines.
-      - run: npm test
+      - run: npm run test:coverage
+      - name: Report coverage
+        run: |
+          {
+            echo "## Coverage"
+            echo
+            echo "| File | Statements | Branches | Functions | Lines |"
+            echo "| --- | ---: | ---: | ---: | ---: |"
+            jq -r --arg root "$PWD/" '
+              to_entries[]
+              | "| \(if .key == "total" then "**All files**" else (.key | ltrimstr($root)) end) | \(.value.statements.pct)% | \(.value.branches.pct)% | \(.value.functions.pct)% | \(.value.lines.pct)% |"
+            ' coverage/coverage-summary.json
+          } >> "$GITHUB_STEP_SUMMARY"
 
   build:
     name: Build

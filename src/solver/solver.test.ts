@@ -4,8 +4,8 @@ import { formatMove, parseMoves } from '../cube/moves'
 import { SOLVED, applyMoves, isSolved, type Color } from '../cube/state'
 import { LOCALES } from '../i18n'
 import { caption, groupLabel } from '../i18n/locale'
-import { exampleSolve } from './examples'
-import { tileShown } from './method'
+import { algorithmDemo, exampleSolve, stageDemo } from './examples'
+import { STAGES, tileShown } from './method'
 import { STAGE_GOALS, solve, type Segment } from './solver'
 
 function stageEndStates(start: string, segments: Segment[]) {
@@ -99,6 +99,17 @@ describe('eight-step solver', () => {
     expect(isSolved(sol.end)).toBe(true)
     expect(sol.segments[0].text.id).toBe('holdYellowOnTop')
   })
+
+  it('counts turning the cube over toward the first step with work when the daisy is skipped', () => {
+    // Each of these keeps the white cross, so Step 1 has nothing to do.
+    for (const [scramble, firstStage] of [["R U R' z", 3], ['U x2', 7], ['x2', 8]] as const) {
+      const start = applyMoves(SOLVED, parseMoves(scramble))
+      const sol = solve(start)
+      expect(sol.segments[0].text.id).toBe('holdYellowOnTop')
+      expect(sol.segments[0].stage, scramble).toBe(firstStage)
+      for (const [stage, s] of stageEndStates(start, sol.segments)) expect(STAGE_GOALS[stage - 1](s), `${scramble}: stage ${stage} goal`).toBe(true)
+    }
+  })
 })
 
 describe('Solve page example', () => {
@@ -106,6 +117,24 @@ describe('Solve page example', () => {
     const { segments } = exampleSolve()
     for (let stage = 1; stage <= 8; stage++) expect(segments.some((s) => s.stage === stage), `step ${stage}`).toBe(true)
     expect(segments.filter((s) => s.stage === 5 && s.alg).length, 'starts Step 5 from a dot').toBe(3)
+  })
+})
+
+describe('Learn page demos', () => {
+  it('has an example for every step and every algorithm with a Watch button', () => {
+    for (const stage of STAGES) {
+      const demo = stageDemo(stage.id)
+      expect(demo.segments.every((s) => s.stage === stage.id)).toBe(true)
+      const end = applyMoves(demo.start, demo.segments.flatMap((s) => s.moves))
+      expect(STAGE_GOALS[stage.id - 1](end), `step ${stage.id} demo reaches its goal`).toBe(true)
+
+      for (const a of stage.algorithms) {
+        const d = algorithmDemo(stage.id, a.id)
+        expect(d.segments.some((s) => s.alg?.id === a.id), `${a.id} in step ${stage.id}`).toBe(true)
+        expect(d.segments.every((s) => s.stage === stage.id)).toBe(true)
+        for (const t of Object.values(LOCALES)) expect(d.title(t)).not.toMatch(/undefined|NaN/)
+      }
+    }
   })
 })
 

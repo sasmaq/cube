@@ -25,10 +25,9 @@ export function LearnPage({ player }: { player: Player }) {
   const watch = (make: () => Demo) => {
     const d = make()
     setDemo(d)
-    player.load(d.start, d.segments)
+    player.load(d.start, d.segments, 450)
     // On small screens the demo cube sits above the list, so bring it into view.
     if (window.matchMedia('(max-width: 1023px)').matches) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    window.setTimeout(() => player.play(), 450)
   }
 
   const tl = player.timeline

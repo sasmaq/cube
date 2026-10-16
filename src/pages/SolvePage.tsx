@@ -19,7 +19,7 @@ export function SolvePage({ player }: { player: Player }) {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
       if (e.metaKey || e.ctrlKey || e.altKey || target.closest('input, textarea, select, dialog[open]')) return
-      if (target.tagName === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return
+      if ((e.key === ' ' || e.key === 'Enter') && target.closest('button, a, summary')) return
       if (e.key === ' ') player.toggle()
       else if (e.key === forward) (e.shiftKey ? player.nextSegment : player.stepForward)()
       else if (e.key === back) (e.shiftKey ? player.prevSegment : player.stepBack)()

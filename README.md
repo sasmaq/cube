@@ -1,7 +1,5 @@
 # Cube
 
-[![CI](https://github.com/sasmaq/cube/actions/workflows/ci.yml/badge.svg)](https://github.com/sasmaq/cube/actions/workflows/ci.yml)
-
 A static React app that visualizes the **8-step beginner method** on a 3D cube built with three.js.
 
 - **Solve** — one mixed-up cube, solved through all eight steps. The steps run along the bottom, and pieces the
@@ -25,6 +23,7 @@ No backend: everything runs in the browser.
 npm install
 npm run dev        # local dev server
 npm test           # run the test suite once (vitest)
+npm run test:coverage  # the same, plus a coverage report (open coverage/index.html)
 npm run lint       # eslint
 npm run build      # type-check and build to dist/
 npm run preview    # serve the production build

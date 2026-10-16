@@ -29,6 +29,8 @@ export type Player = ReturnType<typeof usePlayer>
 export function usePlayer(initial: Timeline | null = null) {
   const viewRef = useRef<CubeView | null>(null)
   const tokenRef = useRef(0)
+  /** A delayed start requested by `load`; anything the user does first cancels it. */
+  const autoplayRef = useRef<number | undefined>(undefined)
   const [timeline, setTimeline, timelineRef] = useSynced<Timeline | null>(initial)
   const [pos, setPos, posRef] = useSynced(0)
   const [playing, setPlaying, playingRef] = useSynced(false)
@@ -62,12 +64,18 @@ export function usePlayer(initial: Timeline | null = null) {
     [timelineRef],
   )
 
+  const cancelAutoplay = useCallback(() => {
+    window.clearTimeout(autoplayRef.current)
+    autoplayRef.current = undefined
+  }, [])
+
   const attach = useCallback(
     (view: CubeView | null) => {
       viewRef.current = view
       if (!view) {
-        // The canvas went away (e.g. page switch): stop any running playback.
+        // The canvas went away (e.g. page switch): stop any running or pending playback.
         tokenRef.current++
+        cancelAutoplay()
         setPlaying(false)
         return
       }
@@ -76,13 +84,14 @@ export function usePlayer(initial: Timeline | null = null) {
       view.setFlipped(flippedRef.current, false)
       grayAt(posRef.current)
     },
-    [currentState, grayAt, labelsRef, flippedRef, posRef, setPlaying],
+    [currentState, grayAt, labelsRef, flippedRef, posRef, setPlaying, cancelAutoplay],
   )
 
   const stop = useCallback(() => {
     tokenRef.current++
+    cancelAutoplay()
     setPlaying(false)
-  }, [setPlaying])
+  }, [setPlaying, cancelAutoplay])
 
   const seek = useCallback(
     (p: number) => {
@@ -100,6 +109,7 @@ export function usePlayer(initial: Timeline | null = null) {
   /** Animate forward until `stopAt` (exclusive end position) or until paused. */
   const playUntil = useCallback(
     async (stopAt: number) => {
+      cancelAutoplay()
       const t = timelineRef.current
       const view = viewRef.current
       if (!t || !view || playingRef.current || view.isBusy()) return
@@ -120,17 +130,21 @@ export function usePlayer(initial: Timeline | null = null) {
         grayAt(posRef.current)
       }
     },
-    [timelineRef, playingRef, posRef, seek, setPlaying, grayAt, duration, setPos, pauseAtStepsRef],
+    [timelineRef, playingRef, posRef, seek, setPlaying, grayAt, duration, setPos, pauseAtStepsRef, cancelAutoplay],
   )
 
   const play = useCallback(() => playUntil(Number.POSITIVE_INFINITY), [playUntil])
 
   // Lets the current turn finish; the play loop sees the flag and exits afterwards.
-  const pause = useCallback(() => setPlaying(false), [setPlaying])
+  const pause = useCallback(() => {
+    cancelAutoplay()
+    setPlaying(false)
+  }, [setPlaying, cancelAutoplay])
 
   const toggle = useCallback(() => (playingRef.current ? pause() : play()), [playingRef, pause, play])
 
   const stepForward = useCallback(async () => {
+    cancelAutoplay()
     const t = timelineRef.current
     const view = viewRef.current
     if (!t || !view) return
@@ -143,9 +157,10 @@ export function usePlayer(initial: Timeline | null = null) {
     if (tokenRef.current !== token) return
     setPos(i + 1)
     grayAt(i + 1)
-  }, [timelineRef, playingRef, pause, posRef, grayAt, duration, setPos])
+  }, [timelineRef, playingRef, pause, posRef, grayAt, duration, setPos, cancelAutoplay])
 
   const stepBack = useCallback(async () => {
+    cancelAutoplay()
     const t = timelineRef.current
     const view = viewRef.current
     if (!t || !view) return
@@ -159,7 +174,7 @@ export function usePlayer(initial: Timeline | null = null) {
     if (tokenRef.current !== token) return
     setPos(i)
     grayAt(i)
-  }, [timelineRef, playingRef, pause, posRef, grayAt, duration, setPos])
+  }, [timelineRef, playingRef, pause, posRef, grayAt, duration, setPos, cancelAutoplay])
 
   /** Play the rest of the current segment. */
   const nextSegment = useCallback(() => {
@@ -218,17 +233,26 @@ export function usePlayer(initial: Timeline | null = null) {
     seek(0)
   }, [timelineRef, posRef, seek])
 
-  /** Load a solution and show its starting position. */
+  /**
+   * Load a solution and show its starting position. With `autoplayAfter`, start playing after
+   * that many milliseconds, unless the user plays, pauses, steps, seeks or loads something first.
+   */
   const load = useCallback(
-    (start: CubeState, segments: Segment[]) => {
+    (start: CubeState, segments: Segment[], autoplayAfter?: number) => {
       stop()
       const t = buildTimeline(start, segments)
       setTimeline(t)
       setPos(0)
       viewRef.current?.setState(start)
       grayAt(0)
+      if (autoplayAfter !== undefined) {
+        autoplayRef.current = window.setTimeout(() => {
+          autoplayRef.current = undefined
+          play()
+        }, autoplayAfter)
+      }
     },
-    [stop, setTimeline, setPos, grayAt],
+    [stop, setTimeline, setPos, grayAt, play],
   )
 
   const setSpeed = useCallback((v: number) => setSpeedState(Math.max(1, Math.min(SPEED_MS.length, v))), [setSpeedState])
