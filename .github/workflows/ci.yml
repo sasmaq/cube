@@ -54,6 +54,47 @@ jobs:
             ' coverage/coverage-summary.json
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # Cypress runs in its bundled Electron. The runners have no GPU, so Chromium needs this
+  # switch to draw WebGL in software (SwiftShader) instead of refusing to create a context.
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    env:
+      ELECTRON_EXTRA_LAUNCH_ARGS: --enable-unsafe-swiftshader
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          cypress: true
+      - run: npm run test:integration
+      - name: Upload screenshots of failures
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: integration-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+  e2e:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+    env:
+      ELECTRON_EXTRA_LAUNCH_ARGS: --enable-unsafe-swiftshader
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          cypress: true
+      # Builds the app, serves it with `vite preview` and runs the specs against it.
+      - run: npm run test:e2e
+      - name: Upload screenshots of failures
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
   build:
     name: Build
     runs-on: ubuntu-latest

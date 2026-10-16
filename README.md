@@ -15,7 +15,8 @@ No backend: everything runs in the browser.
 - [Vite](https://vite.dev) + React 19 + TypeScript
 - [three.js](https://threejs.org) for the cube
 - Tailwind CSS 4 + [daisyUI 5](https://daisyui.com) for the UI
-- [Vitest](https://vitest.dev) for tests, ESLint for linting
+- [Vitest](https://vitest.dev) for unit tests, [Cypress](https://www.cypress.io) for integration and end-to-end tests
+- ESLint for linting
 
 ## Scripts
 
@@ -24,6 +25,9 @@ npm install
 npm run dev        # local dev server
 npm test           # run the test suite once (vitest)
 npm run test:coverage  # the same, plus a coverage report (open coverage/index.html)
+npm run test:integration  # Cypress component tests: the pages on the real three.js cube
+npm run test:e2e   # build, serve with vite preview, and run the Cypress end-to-end tests
+npm run cypress:open  # the same server, with Cypress's interactive runner (either kind of test)
 npm run lint       # eslint
 npm run build      # type-check and build to dist/
 npm run preview    # serve the production build
@@ -57,10 +61,27 @@ src/
   player/      timeline + usePlayer hook (play / pause / step / seek)
   components/  UI pieces (step bar, playback bar, step panel, move chips…)
   pages/       Solve and Learn pages
+cypress/
+  component/   integration tests: pages and the cube canvas mounted in a real browser
+  e2e/         end-to-end tests against the production build
+  support/     shared setup, including reading the cube's colors off its canvas
 ```
 
 The tests (`src/**/*.test.ts`) check move notation against the standard and the method's algorithms, and run the
 solver on thousands of random scrambles. Every stage has to reach its goal using only the method's moves.
+
+The unit tests run in jsdom, where there is no WebGL, so they swap the three.js view for a stand-in. The Cypress tests
+fill that gap in a real browser:
+
+- **Integration** (`cypress/component`) mounts the Solve and Learn pages and the cube canvas with the real renderer. It
+  checks what the canvas actually draws (gray tiles, the solved colors, white on top after flipping), that a turn and
+  its undo leave the identical picture, real-time playback, resizing, and the message when WebGL is missing.
+- **End-to-end** (`cypress/e2e`) runs the production build: page links and the back button, saved theme and
+  language across reloads, the no-flash script in `index.html`, phone layouts in English and Arabic, and full
+  journeys through both pages.
+
+Both kinds fail on any `console.error`. Cypress runs them in its own Electron browser. If it fails to start with
+`bad option: --no-sandbox`, your shell has `ELECTRON_RUN_AS_NODE` set (some editor extensions set it): unset it first.
 
 The Solve page's cube comes from a fixed scramble (`EXAMPLE_SCRAMBLE` in `src/solver/examples.ts`), chosen so every
 step has work to do. What stays in color at each step is set by `STAGE_PIECES` in `src/solver/method.ts`.

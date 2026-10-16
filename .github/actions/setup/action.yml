@@ -1,6 +1,11 @@
 name: Set up
 description: Install Node from .node-version and the project's dependencies.
 
+inputs:
+  cypress:
+    description: Also install the Cypress app. Jobs that don't run Cypress skip the download.
+    default: 'false'
+
 runs:
   using: composite
   steps:
@@ -8,5 +13,13 @@ runs:
       with:
         node-version-file: .node-version
         cache: npm
+    # The Cypress app lives outside node_modules, so the npm cache doesn't cover it.
+    - if: inputs.cypress == 'true'
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/Cypress
+        key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
     - run: npm ci
       shell: bash
+      env:
+        CYPRESS_INSTALL_BINARY: ${{ inputs.cypress != 'true' && '0' || '' }}
