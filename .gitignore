@@ -28,3 +28,6 @@ dist-ssr
 cypress/screenshots
 cypress/videos
 cypress/downloads
+
+# Wrangler (Cloudflare) local state
+.wrangler
