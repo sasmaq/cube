@@ -59,6 +59,19 @@
   --primary-ink: var(--color-primary);
 }
 
+/* Shadow for the steps floating over the page on phones (shadow-float). It casts upward, since that's
+   the edge the cards scroll under, and dark mode needs a much denser one to show on the dark grays. */
+@theme inline {
+  --shadow-float: var(--float-shadow);
+}
+:root,
+[data-theme='winter'] {
+  --float-shadow: 0 -8px 28px -6px rgb(0 0 0 / 0.3), 0 4px 12px -2px rgb(0 0 0 / 0.12);
+}
+[data-theme='night'] {
+  --float-shadow: 0 -8px 28px -4px rgb(0 0 0 / 0.85), 0 4px 12px -2px rgb(0 0 0 / 0.6);
+}
+
 /* Letter spacing pulls joined Arabic letters apart, so Arabic text keeps its natural spacing. */
 :lang(ar) [class*='tracking-'] {
   letter-spacing: normal;

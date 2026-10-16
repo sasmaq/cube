@@ -15,7 +15,7 @@ export function StageStepper({ timeline, pos, onSelect }: StageStepperProps) {
   const current = stageAt(timeline, pos)
 
   return (
-    <nav aria-label={t.panel.steps} className="sticky bottom-3 z-20 shrink-0 rounded-box border border-base-300 bg-base-100/95 p-1.5 shadow-lg backdrop-blur sm:p-2 lg:static lg:shadow-sm">
+    <nav aria-label={t.panel.steps} className="sticky bottom-3 z-20 shrink-0 rounded-box border border-base-300 bg-base-100/95 p-1.5 shadow-float backdrop-blur sm:p-2 lg:static lg:shadow-sm">
       <ol className="grid grid-cols-8 gap-1 sm:gap-1.5">
         {STAGES.map((stage) => {
           const range = stageRange(timeline, stage.id)
