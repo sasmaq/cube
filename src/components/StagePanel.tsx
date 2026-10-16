@@ -119,7 +119,7 @@ export function StagePanel({ player, timeline }: { player: Player; timeline: Tim
                     type="button"
                     onClick={() => player.seek(start)}
                     className={`flex w-full flex-wrap items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-start text-sm transition-colors ${
-                      isCurrent ? 'bg-primary/10 ring-1 ring-primary/40' : 'hover:bg-base-200'
+                      isCurrent ? 'bg-primary/10 ring-1 ring-inset ring-primary/40' : 'hover:bg-base-200'
                     } ${done ? 'opacity-55' : ''}`}
                   >
                     <span className="flex items-center gap-2">

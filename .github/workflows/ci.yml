@@ -63,27 +63,3 @@ jobs:
               awk -v f="$(basename "$f")" -v s="$size" -v g="$gzip" 'BEGIN { printf "| %s | %.1f kB | %.1f kB |\n", f, s / 1000, g / 1000 }'
             done
           } >> "$GITHUB_STEP_SUMMARY"
-
-  report:
-    name: Report
-    needs: [lint, typecheck, test, build]
-    # Runs after the checks even when some fail, so the summary covers every job.
-    # It fails if any check did not pass, which makes it the one check to require.
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Summarize results
-        env:
-          RESULTS: ${{ toJSON(needs) }}
-        run: |
-          {
-            echo "## CI results"
-            echo
-            echo "| Job | Result |"
-            echo "| --- | --- |"
-            echo "$RESULTS" | jq -r '
-              {lint: "Lint", typecheck: "Type check", test: "Test", build: "Build"} as $names
-              | to_entries[]
-              | "| \($names[.key] // .key) | \({success: "✅ Passed", failure: "❌ Failed", cancelled: "🚫 Cancelled", skipped: "⏭️ Skipped"}[.value.result] // .value.result) |"'
-          } >> "$GITHUB_STEP_SUMMARY"
-          echo "$RESULTS" | jq -e 'all(.[]; .result == "success")' > /dev/null
