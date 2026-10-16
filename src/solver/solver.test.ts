@@ -51,7 +51,8 @@ describe('eight-step solver', () => {
     }
     const avg = counts.reduce((a, b) => a + b, 0) / counts.length
     expect(avg).toBeLessThan(260)
-  })
+    // ~2s alone and ~4s under coverage, so the default 5s is too tight on a busy or slow machine.
+  }, 30_000)
 
   it('only uses F, U, L and R plus whole-cube turns', () => {
     const random = mulberry32(7)
