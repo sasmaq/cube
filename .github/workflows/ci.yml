@@ -13,17 +13,77 @@ concurrency:
 permissions:
   contents: read
 
+# The checks run in parallel. Each one checks out the code and installs dependencies
+# through the shared setup action in .github/actions/setup.
 jobs:
-  check:
-    name: Lint, test and build
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-          cache: npm
-      - run: npm ci
+      - uses: ./.github/actions/setup
       - run: npm run lint
+
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npx tsc -b
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      # On GitHub Actions, Vitest also writes a test report to the job summary
+      # and annotates failing tests on the changed lines.
       - run: npm test
-      - run: npm run build
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      # Bundle only; the Type check job covers the tsc half of `npm run build`.
+      - run: npx vite build
+      - name: Report bundle size
+        run: |
+          {
+            echo "## Bundle size"
+            echo
+            echo "| File | Size | Gzip |"
+            echo "| --- | ---: | ---: |"
+            for f in dist/assets/*; do
+              size=$(wc -c < "$f")
+              gzip=$(gzip -c "$f" | wc -c)
+              awk -v f="$(basename "$f")" -v s="$size" -v g="$gzip" 'BEGIN { printf "| %s | %.1f kB | %.1f kB |\n", f, s / 1000, g / 1000 }'
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  report:
+    name: Report
+    needs: [lint, typecheck, test, build]
+    # Runs after the checks even when some fail, so the summary covers every job.
+    # It fails if any check did not pass, which makes it the one check to require.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize results
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          {
+            echo "## CI results"
+            echo
+            echo "| Job | Result |"
+            echo "| --- | --- |"
+            echo "$RESULTS" | jq -r '
+              {lint: "Lint", typecheck: "Type check", test: "Test", build: "Build"} as $names
+              | to_entries[]
+              | "| \($names[.key] // .key) | \({success: "✅ Passed", failure: "❌ Failed", cancelled: "🚫 Cancelled", skipped: "⏭️ Skipped"}[.value.result] // .value.result) |"'
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "$RESULTS" | jq -e 'all(.[]; .result == "success")' > /dev/null

@@ -91,6 +91,9 @@ export default function App() {
               </div>
             </nav>
             <div className="navbar-end gap-1">
+              <span dir="ltr" className="me-1 hidden text-xs font-medium tabular-nums opacity-50 sm:inline">
+                v{__APP_VERSION__}
+              </span>
               <button
                 type="button"
                 className="btn btn-circle btn-ghost btn-sm text-sm font-bold"
