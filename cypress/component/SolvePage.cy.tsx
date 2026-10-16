@@ -19,7 +19,11 @@ const mountSolve = () =>
       <Solve />
     </I18nContext>,
   )
-const progress = () => cy.get('input[aria-label="Solution progress"]')
+// Turns play in real time, and CI draws WebGL in software at a couple of frames a second, so a
+// single turn there can take seconds. Waits for playback to reach a position get this long.
+const PLAYBACK = { timeout: 60_000 }
+
+const progress = (options?: Partial<Cypress.Timeoutable>) => cy.get('input[aria-label="Solution progress"]', options)
 const button = (label: string) => cy.get(`button[aria-label="${label}"]`)
 
 describe('Solve page on the real cube', () => {
@@ -35,15 +39,17 @@ describe('Solve page on the real cube', () => {
   })
 
   it('turns the cube and back, leaving exactly the same picture', () => {
+    // Until the first frame the canvas is empty, and that picture never comes back.
     cy.cubePixels()
+      .should(({ drawn }) => expect(drawn, 'canvas covered by the cube').to.be.above(0.05))
       .its('hash')
       .then((start) => {
         button('Next move').click()
-        progress().should('have.value', '1')
+        progress(PLAYBACK).should('have.value', '1')
         cy.cubePixels().its('hash').should('not.equal', start)
 
         button('Previous move').click()
-        progress().should('have.value', '0')
+        progress(PLAYBACK).should('have.value', '0')
         cy.cubePixels().its('hash').should('equal', start)
       })
   })
@@ -54,7 +60,7 @@ describe('Solve page on the real cube', () => {
     cy.contains('button', 'Play this part').click()
     button('Pause').should('exist')
     cy.contains('Turning')
-    progress().should('have.value', String(segmentEnd(TIMELINE, k)))
+    progress(PLAYBACK).should('have.value', String(segmentEnd(TIMELINE, k)))
     button('Play').should('exist')
   })
 
@@ -63,7 +69,7 @@ describe('Solve page on the real cube', () => {
     cy.get('input[aria-label="Playback speed"]').setSlider(5)
     button('Play').click()
     button('Pause').should('exist')
-    progress().should('have.value', String(step1End), { timeout: 15_000 })
+    progress(PLAYBACK).should('have.value', String(step1End))
     button('Play').should('exist')
     cy.contains('Step 2 of 8')
   })
