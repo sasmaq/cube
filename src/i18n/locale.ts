@@ -97,6 +97,9 @@ export interface Group {
   n: number
 }
 
+/** The tutorial's steps, in order: looking around, zooming, then each of the cube's view buttons. */
+export type TutorialStep = 'drag' | 'zoom' | 'flip' | 'labels' | 'camera'
+
 type Eight<T> = [T, T, T, T, T, T, T, T]
 
 export interface Locale {
@@ -203,6 +206,30 @@ export interface Locale {
     notationNote: [string, string]
     watchStep: string
     watch: string
+    /** Opens the tutorial again. */
+    tutorial: string
+  }
+  /** The screen first-time visitors see before the tutorial. */
+  welcome: {
+    title: string
+    lead: string
+    /** What the Solve and Learn pages are for, in a line each. */
+    solve: string
+    learn: string
+    start: string
+    startHint: string
+  }
+  tutorial: {
+    progress: (n: number, total: number) => string
+    skip: string
+    back: string
+    next: string
+    finish: string
+    /** The badge on the tutorial's cube. */
+    cube: string
+    tryIt: string
+    didIt: string
+    steps: Record<TutorialStep, Caption>
   }
 }
 

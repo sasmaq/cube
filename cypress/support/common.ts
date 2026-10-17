@@ -24,6 +24,10 @@ declare global {
       cubePixels(): Chainable<CubePixels>
       /** Moves a range input to `value` the way dragging it would, firing React's onChange. */
       setSlider(value: number): Chainable<JQuery<HTMLElement>>
+      /** Drags the mouse from the middle of the cube's canvas to its right edge. */
+      dragCube(): Chainable<JQuery<HTMLCanvasElement>>
+      /** Turns the mouse wheel over the cube's canvas; a negative `deltaY` zooms in. */
+      wheelCube(deltaY: number): Chainable<JQuery<HTMLCanvasElement>>
     }
   }
 }
@@ -114,3 +118,14 @@ Cypress.Commands.add('setSlider', { prevSubject: 'element' }, (subject, value) =
   input.dispatchEvent(new Event('input', { bubbles: true }))
   return cy.wrap(subject, { log: false })
 })
+
+// The mouse is pointer 1, the id the browser itself gives it, so the cube's controls can capture it.
+const mouse = { eventConstructor: 'PointerEvent', pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0 }
+
+Cypress.Commands.add('dragCube', () => {
+  cy.get('canvas').trigger('pointerdown', 'center', { ...mouse, buttons: 1 })
+  cy.get('canvas').trigger('pointermove', 'right', { ...mouse, buttons: 1 })
+  return cy.get('canvas').trigger('pointerup', 'right', { ...mouse, buttons: 0 })
+})
+
+Cypress.Commands.add('wheelCube', (deltaY: number) => cy.get('canvas').trigger('wheel', 'center', { eventConstructor: 'WheelEvent', deltaY }))

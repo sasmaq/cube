@@ -118,6 +118,8 @@ export class CubeView {
     this.controls.minDistance = 7
     this.controls.maxDistance = 20
     this.controls.rotateSpeed = 0.8
+    // The controls also move the camera straight from wheel and touch events, between frames.
+    this.controls.addEventListener('change', () => (this.dirty = true))
 
     this.scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a8a, 1.6))
     const key = new THREE.DirectionalLight(0xffffff, 1.6)
@@ -221,11 +223,12 @@ export class CubeView {
 
   private tick(time: number) {
     if (this.disposed) return
-    const moved = this.controls.update()
+    // Runs the damping; any move it makes marks the view dirty.
+    this.controls.update()
     const animating = this.current !== null || this.queue.length > 0 || this.flip !== null
     this.step(time)
     this.stepFlip(time)
-    if (moved || animating || this.dirty) {
+    if (animating || this.dirty) {
       this.renderer.render(this.scene, this.camera)
       this.dirty = false
     }
@@ -330,11 +333,14 @@ export class CubeView {
   }
 
   resetCamera() {
+    // A drag leaves the view coasting, which would carry it on past the reset. One update without
+    // damping spends what's left of that spin first.
+    this.controls.enableDamping = false
+    this.controls.update()
+    this.controls.enableDamping = true
     this.camera.position.copy(DEFAULT_CAMERA)
     this.controls.target.copy(TARGET)
     this.controls.update()
-    // update() has already recorded the new position, so the next tick won't see a change.
-    this.dirty = true
   }
 
   dispose() {

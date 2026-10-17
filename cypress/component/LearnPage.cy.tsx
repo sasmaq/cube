@@ -4,7 +4,7 @@ import { usePlayer } from '../../src/player/usePlayer'
 
 function Learn() {
   const player = usePlayer()
-  return <LearnPage player={player} />
+  return <LearnPage player={player} onTutorial={() => {}} />
 }
 
 describe('Learn page on the real cube', () => {

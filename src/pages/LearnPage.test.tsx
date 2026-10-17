@@ -15,9 +15,9 @@ vi.mock('../three/CubeView', async () => ({ CubeView: (await import('../test/Fak
 
 const { en } = LOCALES
 
-function Learn() {
+function Learn({ onTutorial = () => {} }: { onTutorial?: () => void }) {
   const player = usePlayer()
-  return <LearnPage player={player} />
+  return <LearnPage player={player} onTutorial={onTutorial} />
 }
 
 function renderLearn() {
@@ -36,6 +36,14 @@ describe('Learn page', () => {
     expect(screen.getByText('Press any “Watch” button to see it on this cube.')).toBeTruthy()
     expect(screen.getByText('Drag to look around · scroll or pinch to zoom')).toBeTruthy()
     expect(screen.getAllByRole('button', { name: 'Watch this step' })).toHaveLength(8)
+  })
+
+  it('starts the tutorial from under the demo cube', () => {
+    const onTutorial = vi.fn()
+    render(<Learn onTutorial={onTutorial} />)
+    const cubeCard = screen.getByText(en.learn.demoCube).closest<HTMLElement>('.card')!
+    fireEvent.click(within(cubeCard).getByRole('button', { name: en.learn.tutorial }))
+    expect(onTutorial).toHaveBeenCalledOnce()
   })
 
   it('plays a move shortly after it is picked, then says it is done', async () => {

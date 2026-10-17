@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
 import '../test/dom'
 import * as THREE from 'three'
+import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { describe, expect, it, vi } from 'vitest'
 import { parseMove, parseMoves } from '../cube/moves'
 import { COLOR_HEX, GRAY_HEX, SOLVED, applyMoves, type Color, type CubeState } from '../cube/state'
 import { CubeView } from './CubeView'
 
 // jsdom can't make a WebGL context, so swap in a renderer that only records what it's asked to do.
-const renderers = vi.hoisted(() => [] as { render: () => void; loop: ((time: number) => void) | null }[])
+const renderers = vi.hoisted(() => [] as { domElement: HTMLCanvasElement; render: () => void; loop: ((time: number) => void) | null }[])
 vi.mock('three', async (importOriginal) => {
   const three = await importOriginal<typeof import('three')>()
   class FakeRenderer {
@@ -34,6 +35,7 @@ interface Internals {
   labels: THREE.Sprite[]
   root: THREE.Group
   camera: THREE.PerspectiveCamera
+  controls: OrbitControls
 }
 
 function setup(size?: { width: number; height: number }) {
@@ -177,6 +179,33 @@ describe('CubeView', () => {
     view.resetCamera()
     tick(32)
     expect(renderer.render).toHaveBeenCalledTimes(renders + 1)
+    expect(internals.camera.position.distanceTo(new THREE.Vector3(6.3, 5.6, 9.0))).toBeCloseTo(0)
+  })
+
+  it('redraws after the wheel zooms between frames', () => {
+    const { tick, renderer, internals } = setup()
+    tick(0)
+    tick(16)
+    const renders = vi.mocked(renderer.render).mock.calls.length
+    const distance = internals.camera.position.length()
+
+    // The controls move the camera from inside the event, before the next frame looks.
+    renderer.domElement.dispatchEvent(new WheelEvent('wheel', { deltaY: 400, cancelable: true }))
+    expect(internals.camera.position.length()).toBeGreaterThan(distance)
+    tick(32)
+    expect(renderer.render).toHaveBeenCalledTimes(renders + 1)
+    tick(48)
+    expect(renderer.render).toHaveBeenCalledTimes(renders + 1)
+  })
+
+  it('stays reset when the camera was still coasting from a drag', () => {
+    const { view, tick, internals } = setup()
+    tick(0)
+    // What a quick drag leaves behind: a spin that damping lets run out over the next frames.
+    internals.controls.rotateLeft(1)
+    tick(16)
+    view.resetCamera()
+    for (let time = 32; time < 1000; time += 16) tick(time)
     expect(internals.camera.position.distanceTo(new THREE.Vector3(6.3, 5.6, 9.0))).toBeCloseTo(0)
   })
 

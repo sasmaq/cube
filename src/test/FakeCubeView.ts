@@ -22,13 +22,16 @@ export class FakeCubeView {
   cameraResets = 0
   disposed = false
   holdTurns = false
+  /** A blank stand-in for the real view's canvas, so tests can drag and scroll on the cube. */
+  canvas = document.createElement('canvas')
   private running: { move: Move; resolve: () => void } | null = null
 
-  constructor() {
+  constructor(container?: HTMLElement) {
     if (FakeCubeView.failNext) {
       FakeCubeView.failNext = false
       throw new Error('WebGL is not available')
     }
+    container?.append(this.canvas)
     FakeCubeView.instances.push(this)
   }
 
@@ -93,5 +96,6 @@ export class FakeCubeView {
   dispose() {
     this.disposed = true
     this.setState(this.state)
+    this.canvas.remove()
   }
 }

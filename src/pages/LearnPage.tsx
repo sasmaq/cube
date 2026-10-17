@@ -17,7 +17,7 @@ const OPPOSITES: [Color, Color][] = [
   ['R', 'O'],
 ]
 
-export function LearnPage({ player }: { player: Player }) {
+export function LearnPage({ player, onTutorial }: { player: Player; onTutorial: () => void }) {
   const t = useI18n()
   const [demo, setDemo] = useState<Demo | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -62,6 +62,10 @@ export function LearnPage({ player }: { player: Player }) {
             ) : (
               <p className="p-2 text-center text-sm opacity-70">{t.learn.pressWatch}</p>
             )}
+            <button type="button" className="btn btn-block" onClick={onTutorial}>
+              {t.learn.tutorial}
+              <Icon name="arrow" className="size-5 rtl:-scale-x-100" />
+            </button>
           </div>
         </div>
       </div>

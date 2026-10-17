@@ -145,6 +145,27 @@ body {
     radial-gradient(120% 90% at 50% 35%, var(--color-base-100) 0%, var(--color-base-200) 100%);
 }
 
+/* The tutorial's ring around the button it's explaining, with a halo pulsing out of it. It's drawn in
+   primary ink, since the bright yellow would vanish against the light cube background. */
+.tutorial-spot {
+  --tutorial-ring: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--primary-ink);
+  box-shadow: var(--tutorial-ring);
+  animation: tutorial-spot 1.6s ease-out infinite;
+}
+@keyframes tutorial-spot {
+  from {
+    box-shadow: var(--tutorial-ring), 0 0 0 4px color-mix(in oklab, var(--primary-ink) 60%, transparent);
+  }
+  to {
+    box-shadow: var(--tutorial-ring), 0 0 0 16px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-spot {
+    animation: none;
+  }
+}
+
 .scrollbar-thin {
   scrollbar-width: thin;
 }

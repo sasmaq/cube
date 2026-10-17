@@ -8,6 +8,11 @@ A static React app that visualizes the **8-step beginner method** on a 3D cube b
 - **Learn** — the basics, the notation, and each step's algorithms, with "Watch" buttons that play real examples on a
   demo cube.
 
+First-time visitors get a welcome screen that explains the app, then a short hands-on tutorial on the cube: dragging to
+look around, zooming, and the three view buttons (white on top, face letters, reset view). Once the tutorial is finished
+or skipped, the browser remembers it (`intro` in localStorage) and opens straight to the app. The Learn page has a
+button to take the tutorial again.
+
 No backend: everything runs in the browser.
 
 ## Stack
@@ -60,7 +65,7 @@ src/
   three/       CubeView — the three.js renderer and turn animations
   player/      timeline + usePlayer hook (play / pause / step / seek)
   components/  UI pieces (step bar, playback bar, step panel, move chips…)
-  pages/       Solve and Learn pages
+  pages/       Solve and Learn pages, and the first-visit welcome and tutorial
 cypress/
   component/   integration tests: pages and the cube canvas mounted in a real browser
   e2e/         end-to-end tests against the production build
@@ -73,12 +78,14 @@ solver on thousands of random scrambles. Every stage has to reach its goal using
 The unit tests run in jsdom, where there is no WebGL, so they swap the three.js view for a stand-in. The Cypress tests
 fill that gap in a real browser:
 
-- **Integration** (`cypress/component`) mounts the Solve and Learn pages and the cube canvas with the real renderer. It
-  checks what the canvas actually draws (gray tiles, the solved colors, white on top after flipping), that a turn and
-  its undo leave the identical picture, real-time playback, resizing, and the message when WebGL is missing.
-- **End-to-end** (`cypress/e2e`) runs the production build: page links and the back button, saved theme and
-  language across reloads, the no-flash script in `index.html`, phone layouts in English and Arabic, and full
-  journeys through both pages.
+- **Integration** (`cypress/component`) mounts the Solve, Learn and tutorial pages and the cube canvas with the real
+  renderer. It checks what the canvas actually draws (gray tiles, the solved colors, white on top after flipping), that
+  a turn and its undo leave the identical picture, that dragging and the mouse wheel move the view, real-time playback,
+  resizing, and the message when WebGL is missing.
+- **End-to-end** (`cypress/e2e`) runs the production build: the first visit through the welcome and tutorial, page links
+  and the back button, saved theme and language across reloads, the no-flash script in `index.html`, phone layouts in
+  English and Arabic, and full journeys through both pages. Every test except the first-visit ones starts with the tutorial
+  already done.
 
 Both kinds fail on any `console.error`. Cypress runs them in its own Electron browser. If it fails to start with
 `bad option: --no-sandbox`, your shell has `ELECTRON_RUN_AS_NODE` set (some editor extensions set it): unset it first.

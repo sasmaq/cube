@@ -6,6 +6,9 @@ import { CubeCanvas } from './CubeCanvas'
 import { Icon } from './Icon'
 import { MoveChip } from './MoveChip'
 
+/** The view buttons in the cube's corner: white on top, face letters and reset view. */
+export type ViewControl = 'flip' | 'labels' | 'camera'
+
 interface CubeStageProps {
   player: Player
   className?: string
@@ -13,10 +16,14 @@ interface CubeStageProps {
   idleLabel?: string
   /** Replaces the "Step n" badge, e.g. for Learn page demos. */
   demoTitle?: string
+  /** Rings one of the view buttons, e.g. while the tutorial explains it. */
+  spotlight?: ViewControl
+  /** Called after a view button has done its job. */
+  onControl?: (control: ViewControl) => void
 }
 
 /** The 3D cube with status overlays: current step, the move being played, and view controls. */
-export function CubeStage({ player, className = '', idleLabel, demoTitle }: CubeStageProps) {
+export function CubeStage({ player, className = '', idleLabel, demoTitle, spotlight, onControl }: CubeStageProps) {
   const t = useI18n()
   const { timeline, pos } = player
   const stage = timeline ? stageAt(timeline, pos) : 0
@@ -25,6 +32,11 @@ export function CubeStage({ player, className = '', idleLabel, demoTitle }: Cube
   const stageName = stage >= 1 && stage <= 8 ? t.stages[stage - 1].name : null
   // The view buttons sit at the end of the row, so their tooltips open toward the middle.
   const tip = t.dir === 'rtl' ? 'tooltip-right' : 'tooltip-left'
+  const spot = (control: ViewControl) => (spotlight === control ? 'tutorial-spot' : '')
+  const use = (control: ViewControl, action: () => void) => () => {
+    action()
+    onControl?.(control)
+  }
 
   return (
     <div className={`cube-stage relative overflow-hidden rounded-box ${className}`}>
@@ -53,8 +65,8 @@ export function CubeStage({ player, className = '', idleLabel, demoTitle }: Cube
           <div className={`tooltip ${tip}`} data-tip={player.flipped ? t.cube.flipBack : t.cube.flipOver}>
             <button
               type="button"
-              className={`btn btn-sm rounded-full max-sm:btn-circle ${player.flipped ? 'btn-primary' : 'btn-ghost bg-base-100/70'}`}
-              onClick={() => player.setFlipped(!player.flipped)}
+              className={`btn btn-sm rounded-full max-sm:btn-circle ${player.flipped ? 'btn-primary' : 'btn-ghost bg-base-100/70'} ${spot('flip')}`}
+              onClick={use('flip', () => player.setFlipped(!player.flipped))}
               aria-pressed={player.flipped}
               aria-label={t.cube.whiteOnTop}
             >
@@ -65,15 +77,15 @@ export function CubeStage({ player, className = '', idleLabel, demoTitle }: Cube
           <div className={`tooltip ${tip}`} data-tip={player.labels ? t.cube.hideLetters : t.cube.showLetters}>
             <button
               type="button"
-              className={`btn btn-circle btn-sm ${player.labels ? 'btn-primary' : 'btn-ghost bg-base-100/70'}`}
-              onClick={() => player.setLabels(!player.labels)}
+              className={`btn btn-circle btn-sm ${player.labels ? 'btn-primary' : 'btn-ghost bg-base-100/70'} ${spot('labels')}`}
+              onClick={use('labels', () => player.setLabels(!player.labels))}
               aria-label={t.cube.toggleLetters}
             >
               <Icon name="tag" className="size-4" />
             </button>
           </div>
           <div className={`tooltip ${tip}`} data-tip={t.cube.resetView}>
-            <button type="button" className="btn btn-circle btn-ghost btn-sm bg-base-100/70" onClick={player.resetCamera} aria-label={t.cube.resetView}>
+            <button type="button" className={`btn btn-circle btn-ghost btn-sm bg-base-100/70 ${spot('camera')}`} onClick={use('camera', player.resetCamera)} aria-label={t.cube.resetView}>
               <Icon name="camera" className="size-4" />
             </button>
           </div>

@@ -460,5 +460,48 @@ export const en: Locale = {
     notationNote: ['The eight steps only need F, U, R and L. This app also writes ', ' when the solver turns the whole cube to bring a new face to the front.'],
     watchStep: 'Watch this step',
     watch: 'Watch',
+    tutorial: 'Start tutorial',
+  },
+
+  welcome: {
+    title: 'Learn to solve the cube',
+    lead: 'Follow a mixed-up cube as it’s solved with the 8-step beginner method, one move at a time, on a 3D cube you can turn and zoom.',
+    solve: 'Watch one cube go through all eight steps. Play, pause, or go move by move.',
+    learn: 'The basics, the moves, and each step’s algorithms, with a demo for every one.',
+    start: 'Start',
+    startHint: 'First, a quick tutorial on using the cube.',
+  },
+
+  tutorial: {
+    progress: (n, total) => `Tutorial · ${n} of ${total}`,
+    skip: 'Skip tutorial',
+    back: 'Back',
+    next: 'Next',
+    finish: 'Let’s go',
+    cube: 'Practice cube',
+    tryIt: 'Try it on the cube.',
+    didIt: 'Nice, that’s it!',
+    steps: {
+      drag: {
+        title: 'Look around',
+        detail: 'Drag the cube with your mouse or finger to see it from any side. This only moves your view, never the pieces.',
+      },
+      zoom: {
+        title: 'Zoom in and out',
+        detail: 'Scroll with the mouse wheel, or pinch with two fingers, to bring the cube closer or push it back.',
+      },
+      flip: {
+        title: 'White on top',
+        detail: 'Every step holds the cube with yellow on top. To check the white side underneath, press White on top to turn the cube over, then press it again to turn it back.',
+      },
+      labels: {
+        title: 'Face letters',
+        detail: 'Moves are named after the faces: U for up, F for front, R for right and L for left. Press the letters button to label each face.',
+      },
+      camera: {
+        title: 'Reset the view',
+        detail: 'Lost your angle? The reset button turns your view back to where it started.',
+      },
+    },
   },
 }
