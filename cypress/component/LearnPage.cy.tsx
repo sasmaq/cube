@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { I18nContext, LOCALES } from '../../src/i18n'
 import { LearnPage } from '../../src/pages/LearnPage'
 import { usePlayer } from '../../src/player/usePlayer'
+import type { Demo } from '../../src/solver/examples'
 
 function Learn() {
   const player = usePlayer()
-  return <LearnPage player={player} onTutorial={() => {}} />
+  const [demo, setDemo] = useState<Demo | null>(null)
+  return <LearnPage player={player} demo={demo} onDemo={setDemo} onTutorial={() => {}} />
 }
 
 describe('Learn page on the real cube', () => {

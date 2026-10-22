@@ -358,6 +358,9 @@ export class CubeView {
     })
     for (const m of this.materials.values()) m.dispose()
     this.renderer.dispose()
+    // dispose() leaves the WebGL context alive until garbage collection, and browsers only allow a
+    // handful at once. Every page switch makes a new view, so give this one up now.
+    this.renderer.forceContextLoss()
     this.renderer.domElement.remove()
   }
 }

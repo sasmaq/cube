@@ -8,12 +8,15 @@ import { COLOR_HEX, GRAY_HEX, SOLVED, applyMoves, type Color, type CubeState } f
 import { CubeView } from './CubeView'
 
 // jsdom can't make a WebGL context, so swap in a renderer that only records what it's asked to do.
-const renderers = vi.hoisted(() => [] as { domElement: HTMLCanvasElement; render: () => void; loop: ((time: number) => void) | null }[])
+const renderers = vi.hoisted(
+  () => [] as { domElement: HTMLCanvasElement; render: () => void; forceContextLoss: () => void; loop: ((time: number) => void) | null }[],
+)
 vi.mock('three', async (importOriginal) => {
   const three = await importOriginal<typeof import('three')>()
   class FakeRenderer {
     domElement = document.createElement('canvas')
     render = vi.fn()
+    forceContextLoss = vi.fn()
     loop: ((time: number) => void) | null = null
     constructor() {
       renderers.push(this)
@@ -235,12 +238,13 @@ describe('CubeView', () => {
     expect(setup({ width: 300, height: 600 }).internals.camera.zoom).toBeCloseTo(0.5 / 1.1)
   })
 
-  it('stops, resolves pending turns and removes its canvas when disposed', async () => {
+  it('stops, resolves pending turns, lets go of its WebGL context and removes its canvas when disposed', async () => {
     const { view, container, renderer, tick } = setup()
     const turn = view.animate(parseMove('R'), 100)
     view.dispose()
     await turn
     expect(renderer.loop).toBeNull()
+    expect(renderer.forceContextLoss).toHaveBeenCalledOnce()
     expect(container.querySelector('canvas')).toBeNull()
     tick(0)
     expect(renderer.render).not.toHaveBeenCalled()

@@ -31,6 +31,8 @@ export function usePlayer(initial: Timeline | null = null) {
   const tokenRef = useRef(0)
   /** A delayed start requested by `load`; anything the user does first cancels it. */
   const autoplayRef = useRef<number | undefined>(undefined)
+  /** The play loop while it runs. Playing again before a paused loop has exited moves its `stopAt` and carries it on. */
+  const loopRef = useRef<{ token: number; stopAt: number } | null>(null)
   const [timeline, setTimeline, timelineRef] = useSynced<Timeline | null>(initial)
   const [pos, setPos, posRef] = useSynced(0)
   const [playing, setPlaying, playingRef] = useSynced(false)
@@ -112,20 +114,30 @@ export function usePlayer(initial: Timeline | null = null) {
       cancelAutoplay()
       const t = timelineRef.current
       const view = viewRef.current
-      if (!t || !view || playingRef.current || view.isBusy()) return
+      if (!t || !view || playingRef.current) return
+      // Paused, but the loop is still finishing its turn: un-pause it, or this press would be lost.
+      const running = loopRef.current
+      if (running?.token === tokenRef.current) {
+        running.stopAt = stopAt
+        setPlaying(true)
+        return
+      }
+      if (view.isBusy()) return
       if (posRef.current >= t.moves.length) seek(0)
-      const token = ++tokenRef.current
+      const loop = { token: ++tokenRef.current, stopAt }
+      loopRef.current = loop
       setPlaying(true)
-      const end = Math.min(stopAt, t.moves.length)
-      while (playingRef.current && tokenRef.current === token && posRef.current < end) {
+      while (playingRef.current && tokenRef.current === loop.token && posRef.current < Math.min(loop.stopAt, t.moves.length)) {
         const i = posRef.current
         grayAt(i)
         await view.animate(t.moves[i].move, duration(t.moves[i].move))
-        if (tokenRef.current !== token) return
+        // Anything that took over (a seek, a step, a new load) also leaves loopRef stale, as its token no longer matches.
+        if (tokenRef.current !== loop.token) return
         setPos(i + 1)
-        if (pauseAtStepsRef.current && stopAt >= t.moves.length && i + 1 < t.moves.length && stageAt(t, i + 1) !== stageAt(t, i)) break
+        if (pauseAtStepsRef.current && loop.stopAt >= t.moves.length && i + 1 < t.moves.length && stageAt(t, i + 1) !== stageAt(t, i)) break
       }
-      if (tokenRef.current === token) {
+      loopRef.current = null
+      if (tokenRef.current === loop.token) {
         setPlaying(false)
         grayAt(posRef.current)
       }
@@ -135,7 +147,7 @@ export function usePlayer(initial: Timeline | null = null) {
 
   const play = useCallback(() => playUntil(Number.POSITIVE_INFINITY), [playUntil])
 
-  // Lets the current turn finish; the play loop sees the flag and exits afterwards.
+  // Lets the current turn finish; the play loop sees the flag and exits afterwards, unless play comes first.
   const pause = useCallback(() => {
     cancelAutoplay()
     setPlaying(false)

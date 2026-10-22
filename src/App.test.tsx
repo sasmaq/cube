@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import './test/dom'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { LOCALES } from './i18n'
@@ -58,6 +58,19 @@ describe('App', () => {
     expect(FakeCubeView.latest().state).toBe(buildTimeline(example.start, example.segments).states[1])
   })
 
+  it('keeps the Learn demo and its title while the Solve page is open', async () => {
+    render(<App />)
+    await click(screen.getByRole('tab', { name: /Learn/ }))
+    const row = screen.getByText(en.algorithms['daisy-left'].name).closest('.min-w-0')!.parentElement!
+    await click(within(row).getByRole('button', { name: en.learn.watch }))
+    const title = `${en.algorithms['daisy-left'].name} · ${en.common.step(1)}`
+    expect(screen.getByText(title)).toBeTruthy()
+
+    await click(screen.getByRole('tab', { name: /Solve/ }))
+    await click(screen.getByRole('tab', { name: /Learn/ }))
+    expect(screen.getByText(title)).toBeTruthy()
+  })
+
   it('takes the tutorial again from the Learn page, then comes back to it', async () => {
     render(<App />)
     await click(screen.getByRole('tab', { name: /Learn/ }))
@@ -90,6 +103,12 @@ describe('App', () => {
     localStorage.setItem('lang', 'en')
     render(<App />)
     expect(html.dir).toBe('ltr')
+  })
+
+  it('saves the theme and language only once the visitor picks them, so until then they follow the system', () => {
+    render(<App />)
+    expect(localStorage.getItem('theme')).toBeNull()
+    expect(localStorage.getItem('lang')).toBeNull()
   })
 
   it('toggles dark mode and remembers it', async () => {

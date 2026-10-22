@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { STAGES } from '../solver/method'
 import { DEMO_MOVES, algorithmDemo, moveDemo, stageDemo, type Demo } from '../solver/examples'
 import { segmentAt } from '../player/timeline'
@@ -17,14 +17,21 @@ const OPPOSITES: [Color, Color][] = [
   ['R', 'O'],
 ]
 
-export function LearnPage({ player, onTutorial }: { player: Player; onTutorial: () => void }) {
+interface LearnPageProps {
+  player: Player
+  /** What the player has loaded. It lives with the player, so both outlast a visit to another page. */
+  demo: Demo | null
+  onDemo: (demo: Demo) => void
+  onTutorial: () => void
+}
+
+export function LearnPage({ player, demo, onDemo, onTutorial }: LearnPageProps) {
   const t = useI18n()
-  const [demo, setDemo] = useState<Demo | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
   const watch = (make: () => Demo) => {
     const d = make()
-    setDemo(d)
+    onDemo(d)
     player.load(d.start, d.segments, 450)
     // On small screens the demo cube sits above the list, so bring it into view.
     if (window.matchMedia('(max-width: 1023px)').matches) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })

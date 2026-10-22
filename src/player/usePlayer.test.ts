@@ -178,6 +178,29 @@ describe('usePlayer', () => {
     expect(view.animated).toHaveLength(1)
   })
 
+  it('carries on playing when play is pressed again before the paused turn has finished', async () => {
+    const { view, player } = setup({ holdTurns: true })
+    let playing: Promise<void> | undefined
+    act(() => {
+      playing = player().play()
+    })
+    act(() => player().pause())
+    act(() => {
+      player().play()
+    })
+    expect(player().playing).toBe(true)
+    await act(async () => view.finishTurn())
+    await act(async () => view.finishTurn())
+    await act(async () => {
+      view.finishTurn()
+      await playing
+    })
+    // It plays on to the end of Step 1, as if it had never paused.
+    expect(formatMoves(view.animated)).toBe('y U F')
+    expect(player().pos).toBe(3)
+    expect(player().playing).toBe(false)
+  })
+
   it.each(['stepForward', 'stepBack', 'nextSegment', 'toggle'] as const)('pauses instead when %s is used while playing', async (control) => {
     const { view, player } = setup({ holdTurns: true })
     act(() => player().seek(1))

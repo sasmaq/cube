@@ -95,6 +95,8 @@ describe('The app', () => {
         expect(bottom, 'steps bottom').to.be.at.most(nav.ownerDocument.documentElement.clientHeight)
       })
       cy.cubePixels().its('clipped').should('equal', false)
+      // The app's name is hidden next to the logo here, but the link back to Solve still has one.
+      cy.get('header a').should('have.attr', 'aria-label', t.app.name)
 
       tab(t.app.learn).click()
       cy.contains('h2', t.learn.basicsTitle)

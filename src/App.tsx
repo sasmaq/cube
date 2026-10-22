@@ -9,7 +9,7 @@ import { TutorialPage } from './pages/TutorialPage'
 import { WelcomePage } from './pages/WelcomePage'
 import { buildTimeline } from './player/timeline'
 import { usePlayer } from './player/usePlayer'
-import { exampleSolve } from './solver/examples'
+import { exampleSolve, type Demo } from './solver/examples'
 
 type Page = 'solve' | 'learn'
 type Theme = 'winter' | 'night'
@@ -33,6 +33,15 @@ function initialTheme(): Theme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'winter'
 }
 
+/** Saves something the visitor chose. Storage can be blocked; then the choice lasts until the page closes. */
+function remember(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // Not persisting it is fine.
+  }
+}
+
 /** The welcome screen, unless this browser has already finished or skipped the tutorial. */
 function initialIntro(): Intro | null {
   try {
@@ -51,6 +60,8 @@ export default function App() {
   const t = LOCALES[lang]
   const solvePlayer = usePlayer(EXAMPLE_TIMELINE)
   const learnPlayer = usePlayer()
+  // Kept with the Learn page's player, so the demo keeps its title while another page is open.
+  const [learnDemo, setLearnDemo] = useState<Demo | null>(null)
 
   useEffect(() => {
     const onHash = () => setPage(pageFromHash())
@@ -60,11 +71,6 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
-    try {
-      localStorage.setItem('theme', theme)
-    } catch {
-      // Not persisting the theme is fine.
-    }
   }, [theme])
 
   useEffect(() => {
@@ -72,12 +78,18 @@ export default function App() {
     root.lang = t.lang
     root.dir = t.dir
     document.title = t.app.name
-    try {
-      localStorage.setItem('lang', t.lang)
-    } catch {
-      // Not persisting the language is fine.
-    }
   }, [t])
+
+  // Only a choice made with the buttons is saved. Until then each visit follows the system's color
+  // scheme and the browser's language, as they are at the time.
+  const chooseTheme = (next: Theme) => {
+    setTheme(next)
+    remember('theme', next)
+  }
+  const chooseLang = (next: Lang) => {
+    setLang(next)
+    remember('lang', next)
+  }
 
   const go = (p: Page) => {
     window.location.hash = p === 'learn' ? 'learn' : ''
@@ -91,16 +103,13 @@ export default function App() {
   }
 
   // Finishing or skipping the tutorial opens whichever page the address asks for.
+  // Without storage the welcome comes back next visit, which is fine.
   const finishIntro = () => {
     showIntro(null)
-    try {
-      localStorage.setItem('intro', 'done')
-    } catch {
-      // Without storage the welcome comes back next visit, which is fine.
-    }
+    remember('intro', 'done')
   }
 
-  const settings = <Settings theme={theme} onTheme={setTheme} onLang={setLang} />
+  const settings = <Settings theme={theme} onTheme={chooseTheme} onLang={chooseLang} />
 
   return (
     <I18nContext value={t}>
@@ -120,7 +129,13 @@ export default function App() {
             <header className="sticky top-0 z-30 border-b border-base-300 bg-base-100/90 backdrop-blur">
               <div className="navbar mx-auto max-w-[1400px] gap-2 px-3 sm:px-4">
                 <div className="navbar-start gap-2">
-                  <a href="#" onClick={(e) => (e.preventDefault(), go('solve'))} className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
+                  {/* Labeled for phones, where the name beside the logo is hidden. */}
+                  <a
+                    href="#"
+                    onClick={(e) => (e.preventDefault(), go('solve'))}
+                    aria-label={t.app.name}
+                    className="flex items-center gap-2 text-lg font-extrabold tracking-tight"
+                  >
                     <Logo />
                     <span className="hidden sm:inline">{t.app.name}</span>
                   </a>
@@ -145,7 +160,11 @@ export default function App() {
             </header>
 
             <main className="mx-auto w-full max-w-[1400px] flex-1 p-3 sm:p-4">
-              {page === 'solve' ? <SolvePage player={solvePlayer} /> : <LearnPage player={learnPlayer} onTutorial={() => showIntro('tutorial')} />}
+              {page === 'solve' ? (
+                <SolvePage player={solvePlayer} />
+              ) : (
+                <LearnPage player={learnPlayer} demo={learnDemo} onDemo={setLearnDemo} onTutorial={() => showIntro('tutorial')} />
+              )}
             </main>
           </>
         )}

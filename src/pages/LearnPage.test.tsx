@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
 import '../test/dom'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { formatMoves } from '../cube/moves'
 import { SOLVED } from '../cube/state'
 import { LOCALES } from '../i18n'
 import { caption, groupLabel } from '../i18n/locale'
 import { usePlayer } from '../player/usePlayer'
-import { stageDemo } from '../solver/examples'
+import { stageDemo, type Demo } from '../solver/examples'
 import { FakeCubeView } from '../test/FakeCubeView'
 import { LearnPage } from './LearnPage'
 
@@ -17,7 +18,8 @@ const { en } = LOCALES
 
 function Learn({ onTutorial = () => {} }: { onTutorial?: () => void }) {
   const player = usePlayer()
-  return <LearnPage player={player} onTutorial={onTutorial} />
+  const [demo, setDemo] = useState<Demo | null>(null)
+  return <LearnPage player={player} demo={demo} onDemo={setDemo} onTutorial={onTutorial} />
 }
 
 function renderLearn() {
