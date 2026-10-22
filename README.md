@@ -13,6 +13,8 @@ look around, zooming, and the three view buttons (white on top, face letters, re
 or skipped, the browser remembers it (`intro` in localStorage) and opens straight to the app. The Learn page has a
 button to take the tutorial again.
 
+Any other address gets a 404 page (`404.html`, a small entry of its own) with a link back to the app.
+
 No backend: everything runs in the browser.
 
 ## Stack
@@ -35,7 +37,7 @@ npm run test:e2e   # build, serve with vite preview, and run the Cypress end-to-
 npm run cypress:open  # the same server, with Cypress's interactive runner (either kind of test)
 npm run lint       # eslint
 npm run build      # type-check and build to dist/
-npm run preview    # serve the production build
+npm run preview    # serve the production build (unknown paths get 404.html with a 404 status)
 ```
 
 ## The method
@@ -65,7 +67,7 @@ src/
   three/       CubeView — the three.js renderer and turn animations
   player/      timeline + usePlayer hook (play / pause / step / seek)
   components/  UI pieces (step bar, playback bar, step panel, move chips…)
-  pages/       Solve and Learn pages, and the first-visit welcome and tutorial
+  pages/       Solve and Learn pages, the first-visit welcome and tutorial, and the 404 page
 cypress/
   component/   integration tests: pages and the cube canvas mounted in a real browser
   e2e/         end-to-end tests against the production build
@@ -84,7 +86,7 @@ fill that gap in a real browser:
   resizing, and the message when WebGL is missing.
 - **End-to-end** (`cypress/e2e`) runs the production build: the first visit through the welcome and tutorial, page links
   and the back button, saved theme and language across reloads, the no-flash script in `index.html`, phone layouts in
-  English and Arabic, and full journeys through both pages. Every test except the first-visit ones starts with the tutorial
+  English and Arabic, full journeys through both pages, and the 404 page. Every test except the first-visit ones starts with the tutorial
   already done.
 
 Both kinds fail on any `console.error`. Cypress runs them in its own Electron browser. If it fails to start with

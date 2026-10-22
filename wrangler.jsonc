@@ -1,6 +1,7 @@
 // Cloudflare Pages project. `npm run deploy` builds the app and uploads dist/ with Wrangler.
 // The headers in public/_headers are copied into dist/ by the build and applied by Pages.
-// Routing is hash-based (#learn), so the site needs no redirects or SPA fallback.
+// Routing is hash-based (#learn), so the site needs no redirects or SPA fallback. Any other path
+// gets dist/404.html with a 404 status; without that file, Pages would serve the app for every path.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cube",

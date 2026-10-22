@@ -232,6 +232,15 @@ export interface Locale {
     didIt: string
     steps: Record<TutorialStep, Caption>
   }
+  /** The page for addresses the site doesn't have (404.html). */
+  notFound: {
+    /** The browser tab's title. */
+    pageTitle: string
+    title: string
+    lead: string
+    /** The link back to the app. */
+    home: string
+  }
 }
 
 /** Build a segment message, checking its arguments against the caption it names. */

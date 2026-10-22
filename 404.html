@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Served with a 404 status for any address the site doesn't have. The head matches index.html's. -->
+<html lang="en" data-theme="winter">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#ffd500" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <title>Page not found · Cube</title>
+    <script>
+      // Apply the saved or system theme and language before first paint to avoid a flash.
+      try {
+        var t = localStorage.getItem('theme')
+        if (t !== 'winter' && t !== 'night') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'winter'
+        document.documentElement.setAttribute('data-theme', t)
+      } catch (e) {}
+      try {
+        var l = localStorage.getItem('lang')
+        if (l !== 'en' && l !== 'ar') l = navigator.language.toLowerCase().indexOf('ar') === 0 ? 'ar' : 'en'
+        document.documentElement.lang = l
+        document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr'
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/notFound.tsx"></script>
+  </body>
+</html>

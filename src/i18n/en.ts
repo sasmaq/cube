@@ -505,4 +505,11 @@ export const en: Locale = {
       },
     },
   },
+
+  notFound: {
+    pageTitle: 'Page not found · Cube',
+    title: 'Page not found',
+    lead: 'There’s nothing at this address. The link may be mistyped, or the page may have moved.',
+    home: 'Back to the cube',
+  },
 }
