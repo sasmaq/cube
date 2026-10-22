@@ -81,6 +81,14 @@ describe('A first visit', { expose: { intro: true } }, () => {
     it(`keeps the language and dark mode buttons where the app has them, ${width} wide`, () => {
       cy.viewport(width, height)
       cy.visit('/')
+      // Linux (as in CI) and Windows give scrollbars their own width, so a page long enough to scroll
+      // has these buttons that much further in. Hiding scrollbars, as phones and macOS do, leaves
+      // only the layout to compare.
+      cy.document().then((doc) => {
+        const style = doc.createElement('style')
+        style.textContent = 'html { scrollbar-width: none }'
+        doc.head.append(style)
+      })
       const buttons = () => cy.get(`button[aria-label="${en.app.otherLanguage.title}"], label[title="${en.app.toggleDarkMode}"]`)
       const places = ($els: JQuery<HTMLElement>) => $els.toArray().map((el) => ({ left: el.getBoundingClientRect().left, top: el.getBoundingClientRect().top }))
       cy.contains('h1', en.welcome.title)
