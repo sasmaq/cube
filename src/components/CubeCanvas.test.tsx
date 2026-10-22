@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { LOCALES } from '../i18n'
 import { FakeCubeView } from '../test/FakeCubeView'
+import { loadCubeView } from '../three/loadCubeView'
 import { CubeCanvas } from './CubeCanvas'
 
 const download = vi.hoisted(() => ({ fails: false }))
@@ -31,14 +32,31 @@ describe('Cube canvas', () => {
     download.fails = false
   })
 
-  it('shows a spinner while the renderer downloads, then the cube', async () => {
+  it('stays quiet when the download fails after the canvas is gone', async () => {
+    download.fails = true
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const onReady = vi.fn()
+    render(<CubeCanvas onReady={onReady} />).unmount()
+    await expect(loadCubeView()).rejects.toThrow()
+    expect(error).toHaveBeenCalled()
+    // Just the null from unmounting, not a second one for the failure.
+    expect(onReady).toHaveBeenCalledTimes(1)
+    download.fails = false
+  })
+
+  it('shows a spinner while the renderer downloads, then the cube, if the canvas is still there', async () => {
     const onReady = vi.fn()
     const { container } = render(<CubeCanvas onReady={onReady} />)
+    const goneReady = vi.fn()
+    render(<CubeCanvas onReady={goneReady} />).unmount()
     expect(spinner(container)).not.toBeNull()
     expect(onReady).not.toHaveBeenCalled()
     await waitFor(() => expect(onReady).toHaveBeenCalledWith(FakeCubeView.latest()))
     expect(spinner(container)).toBeNull()
     expect(container.querySelector('canvas')).toBe(FakeCubeView.latest().canvas)
+    // The canvas removed during the download gets no cube.
+    expect(FakeCubeView.instances).toHaveLength(1)
+    expect(goneReady).toHaveBeenCalledTimes(1)
   })
 
   it('shows later cubes at once, without downloading again', () => {

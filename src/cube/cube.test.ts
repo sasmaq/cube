@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { faceStickerIndex, FACES } from './geometry'
 import { formatMoves, invertMoves, parseMoves, simplifyMoves, type Move } from './moves'
-import { SOLVED, applyMoves, centerColor, colorFacing, isSolved, pieceAt, type CubeState } from './state'
+import { SOLVED, applyMoves, centerColor, colorFacing, findPiece, isSolved, pieceAt, type CubeState } from './state'
 
 const run = (alg: string, from: CubeState = SOLVED) => applyMoves(from, parseMoves(alg))
 const face = (s: CubeState, f: string) => s.slice(FACES.indexOf(f as never) * 9, FACES.indexOf(f as never) * 9 + 9)
@@ -62,6 +62,11 @@ describe('move algebra', () => {
   it('isSolved accepts any whole-cube orientation', () => {
     expect(isSolved(run('y x2 z'))).toBe(true)
     expect(isSolved(run('R'))).toBe(false)
+  })
+  it('findPiece rejects colors no piece has', () => {
+    // Yellow and white are opposite, so no edge or corner carries both.
+    expect(() => findPiece(SOLVED, ['Y', 'W'])).toThrow('Piece YW not found')
+    expect(() => findPiece(SOLVED, ['Y', 'W', 'B'])).toThrow('Piece YWB not found')
   })
 })
 

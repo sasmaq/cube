@@ -41,17 +41,28 @@ jobs:
       # On GitHub Actions, Vitest also writes a test report to the job summary
       # and annotates failing tests on the changed lines.
       - run: npm run test:coverage
+      # The total leads the job summary, with the per-file table folded under it, and is also
+      # posted as a notice so it shows on the run's page without opening the summary.
       - name: Report coverage
         run: |
+          total=$(jq -r '.total | "\(.statements.pct)% statements · \(.branches.pct)% branches · \(.functions.pct)% functions · \(.lines.pct)% lines"' coverage/coverage-summary.json)
+          echo "::notice title=Total coverage::$total"
           {
             echo "## Coverage"
+            echo
+            echo "**Total:** $total"
+            echo
+            echo "<details><summary>By file</summary>"
             echo
             echo "| File | Statements | Branches | Functions | Lines |"
             echo "| --- | ---: | ---: | ---: | ---: |"
             jq -r --arg root "$PWD/" '
               to_entries[]
-              | "| \(if .key == "total" then "**All files**" else (.key | ltrimstr($root)) end) | \(.value.statements.pct)% | \(.value.branches.pct)% | \(.value.functions.pct)% | \(.value.lines.pct)% |"
+              | select(.key != "total")
+              | "| \(.key | ltrimstr($root)) | \(.value.statements.pct)% | \(.value.branches.pct)% | \(.value.functions.pct)% | \(.value.lines.pct)% |"
             ' coverage/coverage-summary.json
+            echo
+            echo "</details>"
           } >> "$GITHUB_STEP_SUMMARY"
 
   # Cypress runs in its bundled Electron. The runners have no GPU, so Chromium needs this

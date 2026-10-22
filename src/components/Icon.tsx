@@ -27,7 +27,7 @@ export type IconName = keyof typeof PATHS
 
 const FILLED: IconName[] = ['play', 'pause', 'stepForward', 'stepBack', 'skipForward', 'skipBack']
 
-export function Icon({ name, className = 'size-5', title }: { name: IconName; className?: string; title?: string }) {
+export function Icon({ name, className = 'size-5' }: { name: IconName; className?: string }) {
   const filled = FILLED.includes(name)
   return (
     <svg
@@ -38,10 +38,8 @@ export function Icon({ name, className = 'size-5', title }: { name: IconName; cl
       strokeWidth={1.8}
       strokeLinecap="round"
       strokeLinejoin="round"
-      aria-hidden={title ? undefined : true}
-      role={title ? 'img' : undefined}
+      aria-hidden
     >
-      {title && <title>{title}</title>}
       <path d={PATHS[name]} />
     </svg>
   )

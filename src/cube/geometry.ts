@@ -28,14 +28,6 @@ export const FACE_NORMALS: Record<Face, Vec3> = {
 /** The four faces around the vertical axis, in the order a U turn carries stickers (F → L → B → R). */
 export const SIDE_FACES: readonly Face[] = ['F', 'R', 'B', 'L']
 
-export function faceFromNormal(n: Vec3): Face {
-  for (const f of FACES) {
-    const m = FACE_NORMALS[f]
-    if (m[0] === n[0] && m[1] === n[1] && m[2] === n[2]) return f
-  }
-  throw new Error(`Not an axis normal: ${n.join(',')}`)
-}
-
 function localIndex(face: Face, [x, y, z]: Vec3): number {
   switch (face) {
     case 'U':

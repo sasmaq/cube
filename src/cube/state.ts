@@ -1,16 +1,5 @@
-import {
-  CORNER_POSITIONS,
-  EDGE_POSITIONS,
-  FACES,
-  FACE_NORMALS,
-  STICKERS,
-  centerIndex,
-  cubieAt,
-  faceFromNormal,
-  type Face,
-  type Vec3,
-} from './geometry'
-import { parseMoves, permutationOf, type Move } from './moves'
+import { CORNER_POSITIONS, EDGE_POSITIONS, FACES, STICKERS, centerIndex, cubieAt, type Face, type Vec3 } from './geometry'
+import { permutationOf, type Move } from './moves'
 
 /** Sticker colors: Yellow, White, Blue, Green, Red, Orange. */
 export type Color = 'Y' | 'W' | 'B' | 'G' | 'R' | 'O'
@@ -52,35 +41,8 @@ export function applyMoves(state: CubeState, moves: readonly Move[]): CubeState 
   return s
 }
 
-/** The 24 ways to hold a cube, as whole-cube rotation sequences. */
-export const ORIENTATIONS: readonly Move[][] = ['', 'x', 'x2', "x'", 'z', "z'"].flatMap((a) =>
-  ['', 'y', 'y2', "y'"].map((b) => parseMoves(`${a} ${b}`)),
-)
-
-export const centersOf = (s: CubeState) => FACES.map((f) => s[centerIndex(f)]).join('')
-
-/** Turn the whole cube so it is held with yellow on top and blue in front. */
-export function orientToHome(state: CubeState): CubeState {
-  const home = centersOf(SOLVED)
-  for (const o of ORIENTATIONS) {
-    const s = applyMoves(state, o)
-    if (centersOf(s) === home) return s
-  }
-  return state
-}
-
-export function colorAt(state: CubeState, index: number): Color {
-  return state[index] as Color
-}
-
 export function centerColor(state: CubeState, face: Face): Color {
   return state[centerIndex(face)] as Color
-}
-
-/** Which face currently has the given center color. */
-export function faceOfCenter(state: CubeState, color: Color): Face {
-  for (const f of FACES) if (centerColor(state, f) === color) return f
-  throw new Error(`No center is ${color}`)
 }
 
 export function isSolved(state: CubeState): boolean {
@@ -147,12 +109,3 @@ export function allCorners(state: CubeState): Piece[] {
 export function isPieceSolved(state: CubeState, piece: Piece): boolean {
   return piece.stickers.every((s) => centerColor(state, s.face) === s.color)
 }
-
-/** Face (other than U/D) that a horizontal normal points at; helper for readable code. */
-export function sideFaceAt(pos: Vec3, axis: 0 | 2): Face {
-  const n: [number, number, number] = [0, 0, 0]
-  n[axis] = pos[axis]
-  return faceFromNormal(n)
-}
-
-export { FACE_NORMALS }
