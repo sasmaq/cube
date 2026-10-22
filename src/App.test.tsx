@@ -1,14 +1,19 @@
 // @vitest-environment jsdom
 import './test/dom'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { LOCALES } from './i18n'
 import { buildTimeline } from './player/timeline'
 import { exampleSolve } from './solver/examples'
 import { FakeCubeView } from './test/FakeCubeView'
+import { loadCubeView } from './three/loadCubeView'
 
 vi.mock('./three/CubeView', async () => ({ CubeView: (await import('./test/FakeCubeView')).FakeCubeView }))
+// Download the renderer up front, so each cube is ready as soon as it's rendered.
+beforeAll(async () => {
+  await loadCubeView()
+})
 
 const html = document.documentElement
 const click = (el: Element) =>

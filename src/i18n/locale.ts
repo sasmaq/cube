@@ -148,6 +148,7 @@ export interface Locale {
     srNextMove: (move: string) => string
     srSolved: string
     webglFailed: string
+    downloadFailed: string
   }
   playback: {
     progress: string

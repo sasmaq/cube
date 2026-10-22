@@ -395,6 +395,7 @@ export const en: Locale = {
     srNextMove: (move) => `Next move ${move}`,
     srSolved: 'Cube solved',
     webglFailed: 'Your browser couldn’t start WebGL, so the 3D cube can’t be shown. Try another browser or enable hardware acceleration.',
+    downloadFailed: 'The 3D cube couldn’t be downloaded. Check your connection and reload the page.',
   },
 
   playback: {

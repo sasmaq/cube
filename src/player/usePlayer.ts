@@ -4,6 +4,7 @@ import { SOLVED, type CubeState } from '../cube/state'
 import { tileShown } from '../solver/method'
 import type { Segment } from '../solver/solver'
 import type { CubeView } from '../three/CubeView'
+import { cubeViewDownloading } from '../three/loadCubeView'
 import { buildTimeline, segmentAt, segmentEnd, stageAt, stageRange, type Timeline } from './timeline'
 
 /** Milliseconds for a quarter turn at each speed setting (1 = slowest). */
@@ -33,6 +34,8 @@ export function usePlayer(initial: Timeline | null = null) {
   const autoplayRef = useRef<number | undefined>(undefined)
   /** The play loop while it runs. Playing again before a paused loop has exited moves its `stopAt` and carries it on. */
   const loopRef = useRef<{ token: number; stopAt: number } | null>(null)
+  /** Play loops waiting for the cube to download. `attach` hands them the view, or null if there won't be one. */
+  const waitingRef = useRef<((view: CubeView | null) => void)[]>([])
   const [timeline, setTimeline, timelineRef] = useSynced<Timeline | null>(initial)
   const [pos, setPos, posRef] = useSynced(0)
   const [playing, setPlaying, playingRef] = useSynced(false)
@@ -74,17 +77,20 @@ export function usePlayer(initial: Timeline | null = null) {
   const attach = useCallback(
     (view: CubeView | null) => {
       viewRef.current = view
-      if (!view) {
-        // The canvas went away (e.g. page switch): stop any running or pending playback.
+      const waiting = waitingRef.current
+      waitingRef.current = []
+      if (view) {
+        view.setState(currentState())
+        view.setLabels(labelsRef.current)
+        view.setFlipped(flippedRef.current, false)
+        grayAt(posRef.current)
+      } else {
+        // The canvas went away (e.g. page switch) or can't show a cube: stop any running or pending playback.
         tokenRef.current++
         cancelAutoplay()
         setPlaying(false)
-        return
       }
-      view.setState(currentState())
-      view.setLabels(labelsRef.current)
-      view.setFlipped(flippedRef.current, false)
-      grayAt(posRef.current)
+      for (const resume of waiting) resume(view)
     },
     [currentState, grayAt, labelsRef, flippedRef, posRef, setPlaying, cancelAutoplay],
   )
@@ -113,20 +119,24 @@ export function usePlayer(initial: Timeline | null = null) {
     async (stopAt: number) => {
       cancelAutoplay()
       const t = timelineRef.current
-      const view = viewRef.current
-      if (!t || !view || playingRef.current) return
-      // Paused, but the loop is still finishing its turn: un-pause it, or this press would be lost.
+      if (!t || playingRef.current) return
+      // Paused, but the loop is still finishing its turn (or waiting for the cube): un-pause it, or this press would be lost.
       const running = loopRef.current
       if (running?.token === tokenRef.current) {
         running.stopAt = stopAt
         setPlaying(true)
         return
       }
-      if (view.isBusy()) return
+      const attached = viewRef.current
+      if (attached?.isBusy()) return
+      // Without a cube there's nothing to play, unless one is downloading: then play once it's here.
+      if (!attached && !cubeViewDownloading()) return
       if (posRef.current >= t.moves.length) seek(0)
       const loop = { token: ++tokenRef.current, stopAt }
       loopRef.current = loop
       setPlaying(true)
+      const view = attached ?? (await new Promise<CubeView | null>((resume) => waitingRef.current.push(resume)))
+      if (!view || tokenRef.current !== loop.token) return
       while (playingRef.current && tokenRef.current === loop.token && posRef.current < Math.min(loop.stopAt, t.moves.length)) {
         const i = posRef.current
         grayAt(i)

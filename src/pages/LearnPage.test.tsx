@@ -2,7 +2,7 @@
 import '../test/dom'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { useState } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { formatMoves } from '../cube/moves'
 import { SOLVED } from '../cube/state'
 import { LOCALES } from '../i18n'
@@ -10,9 +10,14 @@ import { caption, groupLabel } from '../i18n/locale'
 import { usePlayer } from '../player/usePlayer'
 import { stageDemo, type Demo } from '../solver/examples'
 import { FakeCubeView } from '../test/FakeCubeView'
+import { loadCubeView } from '../three/loadCubeView'
 import { LearnPage } from './LearnPage'
 
 vi.mock('../three/CubeView', async () => ({ CubeView: (await import('../test/FakeCubeView')).FakeCubeView }))
+// Download the renderer up front, so each cube is ready as soon as it's rendered.
+beforeAll(async () => {
+  await loadCubeView()
+})
 
 const { en } = LOCALES
 

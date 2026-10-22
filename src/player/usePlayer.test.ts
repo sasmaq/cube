@@ -1,13 +1,16 @@
 // @vitest-environment jsdom
 import '../test/dom'
 import { act, renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { formatMoves, invertMoves, parseMoves } from '../cube/moves'
 import { SOLVED, applyMoves } from '../cube/state'
 import { say } from '../i18n/locale'
 import type { Segment } from '../solver/solver'
 import { FakeCubeView } from '../test/FakeCubeView'
 import { SPEED_MS, usePlayer, type Player } from './usePlayer'
+
+const renderer = vi.hoisted(() => ({ downloading: false }))
+vi.mock('../three/loadCubeView', () => ({ cubeViewDownloading: () => renderer.downloading }))
 
 const seg = (stage: number, moves: string): Segment => ({ stage, kind: 'algorithm', text: say('makeRoom'), moves: parseMoves(moves) })
 
@@ -340,5 +343,70 @@ describe('usePlayer auto-play after loading', () => {
     expect(view.animated).toHaveLength(0)
     wait(250)
     expect(formatMoves(view.animated)).toBe("L'")
+  })
+})
+
+describe('usePlayer before the cube has downloaded', () => {
+  beforeEach(() => {
+    renderer.downloading = true
+  })
+  afterEach(() => {
+    renderer.downloading = false
+  })
+
+  function setupWithoutView() {
+    const hook = renderHook(() => usePlayer())
+    act(() => hook.result.current.load(START, SEGMENTS))
+    let playing: Promise<void> | undefined
+    act(() => {
+      playing = hook.result.current.play()
+    })
+    return { player: () => hook.result.current, playing: () => playing }
+  }
+
+  it('plays once the cube is here', async () => {
+    const { player, playing } = setupWithoutView()
+    expect(player().playing).toBe(true)
+
+    const view = new FakeCubeView()
+    await act(async () => {
+      player().attach(view.asView())
+      await playing()
+    })
+    expect(formatMoves(view.animated)).toBe('y U F')
+    expect(player().pos).toBe(3)
+    expect(player().playing).toBe(false)
+  })
+
+  it('can be paused while waiting', async () => {
+    const { player, playing } = setupWithoutView()
+    act(() => player().pause())
+    expect(player().playing).toBe(false)
+
+    const view = new FakeCubeView()
+    await act(async () => {
+      player().attach(view.asView())
+      await playing()
+    })
+    expect(view.animated).toEqual([])
+    expect(player().pos).toBe(0)
+  })
+
+  it('stops waiting when the cube can’t be shown', async () => {
+    const { player, playing } = setupWithoutView()
+    await act(async () => {
+      player().attach(null)
+      await playing()
+    })
+    expect(player().playing).toBe(false)
+  })
+
+  it('ignores play when no cube is on its way', async () => {
+    renderer.downloading = false
+    const { player, playing } = setupWithoutView()
+    await act(async () => {
+      await playing()
+    })
+    expect(player().playing).toBe(false)
   })
 })
