@@ -34,6 +34,29 @@ describe('The app', () => {
     cy.contains('Step 1 of 8')
   })
 
+  it('says so when the cube can’t be downloaded, and a reload brings it back', () => {
+    // The renderer's download fails, as it would offline or after a deploy replaced the files. Every
+    // request fails until the network is back, since Vite preloads the file before importing it.
+    let offline = true
+    cy.intercept({ pathname: /^\/assets\/CubeView-.+\.js$/ }, (req) => {
+      if (offline) req.destroy()
+    })
+    // The failure is logged; that's expected here, so it doesn't fail the test.
+    cy.on('window:before:load', (win) => {
+      cy.stub(win.console, 'error').as('consoleError')
+    })
+    cy.visit('/')
+    cy.get('[role=alert]').should('have.text', en.cube.downloadFailed)
+    cy.get('@consoleError').should('have.been.called')
+    cy.contains('Step 1 of 8')
+
+    // Chromium remembers a failed import until the page reloads, which is what the message asks for.
+    cy.then(() => (offline = false))
+    cy.reload()
+    cy.get('[role=alert]').should('not.exist')
+    cy.cubePixels().its('drawn').should('be.above', 0.05)
+  })
+
   it('remembers dark mode and the language after a reload', () => {
     // Every load in this test sees a system that prefers light, so only the saved choice can make it dark.
     cy.on('window:before:load', (win) => {

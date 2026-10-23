@@ -86,7 +86,8 @@ fill that gap in a real browser:
   resizing, and the message when WebGL is missing.
 - **End-to-end** (`cypress/e2e`) runs the production build: the first visit through the welcome and tutorial, page links
   and the back button, saved theme and language across reloads, the no-flash script in `index.html`, phone layouts in
-  English and Arabic, full journeys through both pages, and the 404 page. Every test except the first-visit ones starts with the tutorial
+  English and Arabic, full journeys through both pages, the message when the cube can't be downloaded, and the 404
+  page (served for any path with no file behind it). Every test except the first-visit ones starts with the tutorial
   already done.
 
 Both kinds fail on any `console.error`. Cypress runs them in its own Electron browser. If it fails to start with
